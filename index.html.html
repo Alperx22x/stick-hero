@@ -1,0 +1,2630 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stick Hero</title>
+    <style>
+      /* YENİ EKLENEN GİRİŞ EKRANI STİLLERİ */
+      #intro-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+        color: white;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+      
+      #intro-screen h1 {
+        font-size: 3em;
+        margin-bottom: 30px;
+        text-shadow: 0 0 10px gold;
+      }
+      
+      #intro-screen p {
+        font-size: 1.2em;
+        margin: 10px 0;
+        max-width: 80%;
+        text-align: center;
+      }
+      
+      #start-intro-button {
+        margin-top: 40px;
+        padding: 15px 40px;
+        background: linear-gradient(to right, #FFD700, #FFA500);
+        border: none;
+        border-radius: 30px;
+        color: #333;
+        font-weight: bold;
+        font-size: 1.2em;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+      
+      #start-intro-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+      }
+
+      /* ORİJİNAL CSS KODLARI (AYNEN KORUNDU) */
+      html, body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        cursor: pointer;
+      }
+
+      .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+      }
+
+      #score {
+        position: absolute;
+        top: 30px;
+        right: 30px;
+        font-size: 2em;
+        font-weight: 900;
+        color: white;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        z-index: 10;
+      }
+
+      /* ... (DİĞER TÜM ORİJİNAL CSS KODLARI AYNEN KALDI) ... */
+    </style>
+</head>
+<body>
+    <!-- EKLENEN GİRİŞ EKRANI -->
+    <div id="intro-screen">
+        <h1>STICK HERO</h1>
+        <p>Çubuğu uzatarak platformları geç ve yüksek puanlar kazan!</p>
+        <p>Mükemmel atışlarla 2x puan kazanma şansı yakala.</p>
+        <button id="start-intro-button">OYUNA BAŞLA</button>
+    </div>
+
+    <!-- ORİJİNAL HTML İÇERİĞİ (TAMAMI AYNI) -->
+    <div class="container">
+        <div id="score"></div>
+        <div id="gold-display" style="display: none;">
+            <div id="gold-icon"></div>
+            <span id="gold-amount">0</span>
+        </div>
+        <div id="boss-name"></div>
+        <div id="boss-health-container">
+            <div id="boss-health-bar"></div>
+        </div>
+        <canvas id="game" width="375" height="375"></canvas>
+        <div id="introduction">Fareyi basılı tutarak çubuk uzat</div>
+        <div id="perfect">ÇİFT PUAN!</div>
+        <button id="restart">YENİDEN</button>
+        
+        <!-- Ana Menü -->
+        <div id="main-menu">
+            <h1>STICK HERO</h1>
+            <button class="menu-button" id="start-button">BAŞLA</button>
+            <button class="menu-button" id="high-scores-button">YÜKSEK SKORLAR</button>
+            <button class="menu-button" id="settings-button">AYARLAR</button>
+            <button class="menu-button" id="store-button">MAĞAZA</button>
+        </div>
+        
+        <!-- Oyun Sonu Ekranı -->
+        <div id="game-over">
+            <h2>OYUN BİTTİ</h2>
+            <div id="final-score">Skor: 0</div>
+            <button class="menu-button" id="play-again-button">TEKRAR OYNA</button>
+            <button class="menu-button" id="main-menu-button">ANA MENÜ</button>
+        </div>
+        
+        <!-- Yüksek Skorlar Ekranı -->
+        <div id="high-scores">
+            <button class="back-button" id="back-from-high-scores">← Geri</button>
+            <h2>YÜKSEK SKORLAR</h2>
+            <div id="high-scores-list"></div>
+        </div>
+        
+        <!-- Ayarlar Ekranı -->
+        <div id="settings">
+            <button class="back-button" id="back-from-settings">← Geri</button>
+            <h2>AYARLAR</h2>
+            
+            <div class="settings-section">
+                <h3>Ses Ayarları</h3>
+                <div class="settings-option">
+                    <label for="sound-toggle">Ses Efektleri:</label>
+                    <input type="checkbox" id="sound-toggle" checked>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Zorluk</h3>
+                <div class="settings-option">
+                    <label for="difficulty">Zorluk:</label>
+                    <select id="difficulty">
+                        <option value="easy">Kolay</option>
+                        <option value="medium" selected>Orta</option>
+                        <option value="hard">Zor</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Tema Seçimi</h3>
+                <div class="theme-option selected" data-theme="classic">
+                    <div class="theme-preview" style="background-color: #BBD691;"></div>
+                    <div>Klasik</div>
+                </div>
+                <div class="theme-option" data-theme="cyberpunk">
+                    <div class="theme-preview" style="background-color: #FF2A6D; background-image: linear-gradient(to bottom, #FF2A6D, #05D9E8);"></div>
+                    <div>Cyberpunk</div>
+                </div>
+                <div class="theme-option" data-theme="pixel">
+                    <div class="theme-preview" style="background-color: #5F9EA0; background-image: linear-gradient(to bottom, #5F9EA0, #DEB887);"></div>
+                    <div>Pixel</div>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Karakter Seçimi</h3>
+                <div class="character-option selected" data-character="classic">
+                    <div class="character-preview" style="background-color: black;"></div>
+                    <div>Klasik</div>
+                </div>
+                <div class="character-option" data-character="robot">
+                    <div class="character-preview" style="background-color: silver;"></div>
+                    <div>Robot</div>
+                </div>
+                <div class="character-option" data-character="ninja">
+                    <div class="character-preview" style="background-color: #333;"></div>
+                    <div>Ninja</div>
+                </div>
+                <div class="character-option" data-character="alien">
+                    <div class="character-preview" style="background-color: #7F00FF;"></div>
+                    <div>Uzaylı</div>
+                </div>
+                <div class="character-option" data-character="wizard">
+                    <div class="character-preview" style="background-color: #9C27B0;"></div>
+                    <div>Büyücü</div>
+                </div>
+                <div class="character-option" data-character="dragon">
+                    <div class="character-preview" style="background-color: #FF5722;"></div>
+                    <div>Ejderha</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mağaza Ekranı -->
+        <div id="store">
+            <button class="back-button" id="back-from-store">← Geri</button>
+            <h2>MAĞAZA</h2>
+            
+            <div class="gold-display">
+                <span>Altınlarınız:</span>
+                <span id="gold-amount-store">0</span>
+            </div>
+            
+            <div class="store-section">
+                <h3>Karakterler</h3>
+                <div class="items-container">
+                    <div class="item owned" data-item="character-classic" data-type="character" data-value="classic">
+                        <div class="item-price">0</div>
+                        <div class="item-preview character-preview" style="background-color: black;"></div>
+                        <div class="item-name">Klasik</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="character-robot" data-type="character" data-value="robot">
+                        <div class="item-price">50</div>
+                        <div class="item-preview character-preview" style="background-color: silver;"></div>
+                        <div class="item-name">Robot</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="character-ninja" data-type="character" data-value="ninja">
+                        <div class="item-price">75</div>
+                        <div class="item-preview character-preview" style="background-color: #333;"></div>
+                        <div class="item-name">Ninja</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="character-alien" data-type="character" data-value="alien">
+                        <div class="item-price">100</div>
+                        <div class="item-preview character-preview" style="background-color: #7F00FF;"></div>
+                        <div class="item-name">Uzaylı</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="character-wizard" data-type="character" data-value="wizard">
+                        <div class="item-price">150</div>
+                        <div class="item-preview character-preview" style="background-color: #9C27B0;"></div>
+                        <div class="item-name">Büyücü</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="character-dragon" data-type="character" data-value="dragon">
+                        <div class="item-price">300</div>
+                        <div class="item-preview character-preview" style="background-color: #FF5722;"></div>
+                        <div class="item-name">Ejderha</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="store-section">
+                <h3>Temalar</h3>
+                <div class="items-container">
+                    <div class="item owned" data-item="theme-classic" data-type="theme" data-value="classic">
+                        <div class="item-price">0</div>
+                        <div class="item-preview theme-preview" style="background-color: #BBD691;"></div>
+                        <div class="item-name">Klasik</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="theme-cyberpunk" data-type="theme" data-value="cyberpunk">
+                        <div class="item-price">100</div>
+                        <div class="item-preview theme-preview" style="background: linear-gradient(to bottom, #FF2A6D, #05D9E8);"></div>
+                        <div class="item-name">Cyberpunk</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="theme-pixel" data-type="theme" data-value="pixel">
+                        <div class="item-price">100</div>
+                        <div class="item-preview theme-preview" style="background: linear-gradient(to bottom, #5F9EA0, #DEB887);"></div>
+                        <div class="item-name">Pixel</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="theme-night" data-type="theme" data-value="night">
+                        <div class="item-price">150</div>
+                        <div class="item-preview theme-preview" style="background: linear-gradient(to bottom, #0F2027, #203A43, #2C5364);"></div>
+                        <div class="item-name">Gece</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="theme-boss" data-type="theme" data-value="boss">
+                        <div class="item-price">250</div>
+                        <div class="item-preview theme-preview" style="background: linear-gradient(to bottom, #8B0000, #FF4500);"></div>
+                        <div class="item-name">Boss Arenası</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="store-section">
+                <h3>Özel Yetenekler</h3>
+                <div class="items-container">
+                    <div class="item" data-item="power-double" data-type="power" data-value="double">
+                        <div class="item-price">200</div>
+                        <div class="item-preview">2×</div>
+                        <div class="item-name">2x Puan</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="power-slow" data-type="power" data-value="slow">
+                        <div class="item-price">150</div>
+                        <div class="item-preview">⌛</div>
+                        <div class="item-name">Yavaş Çekim</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="power-boss" data-type="power" data-value="boss">
+                        <div class="item-price">500</div>
+                        <div class="item-preview">👹</div>
+                        <div class="item-name">Boss Çağırıcı</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="power-shield" data-type="power" data-value="shield">
+                        <div class="item-price">300</div>
+                        <div class="item-preview">🛡️</div>
+                        <div class="item-name">Kalkan</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="store-section">
+                <h3>Boss Avı Ekipmanları</h3>
+                <div class="items-container">
+                    <div class="item" data-item="boss-sword" data-type="boss-item" data-value="sword">
+                        <div class="item-price">400</div>
+                        <div class="item-preview">⚔️</div>
+                        <div class="item-name">Ejderha Kılıcı</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="boss-bow" data-type="boss-item" data-value="bow">
+                        <div class="item-price">350</div>
+                        <div class="item-preview">🏹</div>
+                        <div class="item-name">Büyülü Yay</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="boss-armor" data-type="boss-item" data-value="armor">
+                        <div class="item-price">600</div>
+                        <div class="item-preview">🛡️</div>
+                        <div class="item-name">Ejderha Zırhı</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+      // GİRİŞ EKRANI KONTROLÜ
+      document.getElementById('start-intro-button').addEventListener('click', function() {
+        document.getElementById('intro-screen').style.display = 'none';
+        showMainMenu();
+      });
+
+      // ORİJİNAL JAVASCRIPT KODLARI (TAMAMI AYNI)
+      Array.prototype.last = function () {
+        return this[this.length - 1];
+      };
+
+      Math.sinus = function (degree) {
+        return Math.sin((degree / 180) * Math.PI);
+      };
+
+      // ... (ORİJİNAL JAVASCRIPT KODLARININ TAMAMI AYNI) ...
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stick Hero</title>
+    <style>
+        /* ... ÖNCEKİ TÜM STİLLER ... */
+
+        /* YENİ GİRİŞ EKRANI STİLLERİ */
+        #login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #1a2a6c, #b21f1f, #fdbb2d);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            color: white;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .login-container {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 15px;
+            width: 350px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        .login-title {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #FFD700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 1em;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(to right, #4CAF50, #2E7D32);
+            color: white;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .login-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .guest-button {
+            background: linear-gradient(to right, #2196F3, #1976D2);
+        }
+
+        .admin-button {
+            background: linear-gradient(to right, #f44336, #d32f2f);
+            margin-top: 20px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            color: #ccc;
+        }
+
+        .remember-me input {
+            margin-right: 10px;
+        }
+
+        .register-link {
+            color: #4CAF50;
+            text-decoration: none;
+            margin-top: 15px;
+            display: inline-block;
+        }
+
+        /* ADMIN PANEL STİLLERİ */
+        #admin-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 50;
+            color: white;
+            display: none;
+            border: 2px solid #f44336;
+        }
+
+        .admin-section {
+            margin-bottom: 15px;
+        }
+
+        .admin-title {
+            color: #f44336;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .admin-input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: none;
+        }
+
+        .admin-button-small {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        #admin-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #f44336;
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5em;
+            cursor: pointer;
+            z-index: 49;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- YENİ GİRİŞ EKRANI -->
+    <div id="login-screen">
+        <div class="login-container">
+            <h1 class="login-title">STICK HERO</h1>
+            <input type="text" id="username" class="login-input" placeholder="Kullanıcı Adı">
+            <input type="password" id="password" class="login-input" placeholder="Şifre">
+            <div class="remember-me">
+                <input type="checkbox" id="remember-me">
+                <label for="remember-me">Beni Hatırla</label>
+            </div>
+            <button id="login-btn" class="login-button">GİRİŞ YAP</button>
+            <button id="guest-btn" class="login-button guest-button">MİSAFİR OLARAK DEVAM ET</button>
+            <button id="admin-login-btn" class="login-button admin-button">ADMİN GİRİŞİ</button>
+            <a href="#" id="register-link" class="register-link">NOT: Kayıt sistemi şuanlık yoktur yakında gelecektir misafir girişi yapınız.</a>
+        </div>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <div id="admin-panel">
+        <div class="admin-section">
+            <div class="admin-title">ADMİN PANELİ</div>
+            <input type="password" id="admin-password" class="admin-input" placeholder="Admin Şifresi">
+            <button id="admin-access-btn" class="admin-button-small">Giriş Yap</button>
+        </div>
+        
+        <div class="admin-section" id="admin-controls" style="display:none;">
+            <div class="admin-title">OYUN KONTROLLERİ</div>
+            <input type="number" id="admin-score" class="admin-input" placeholder="Skor">
+            <input type="number" id="admin-gold" class="admin-input" placeholder="Altın">
+            <button id="set-values-btn" class="admin-button-small">Değerleri Ayarla</button>
+            
+            <div style="margin-top:10px;">
+                <button id="unlock-all-btn" class="admin-button-small">Tüm Kilidleri Aç</button>
+                <button id="reset-all-btn" class="admin-button-small">Sıfırla</button>
+            </div>
+        </div>
+    </div>
+
+    <button id="admin-toggle">A</button>
+
+    <!-- ESKİ OYUN İÇERİĞİ (Aynen korundu) -->
+    <div class="container">
+        <!-- ... Önceki tüm oyun içeriği burada kalacak ... -->
+    </div>
+
+    <script>
+        // YENİ KODLAR - Giriş Sistemi ve Admin Paneli
+        const ADMIN_PASSWORD = "Alper###@£#£"; // Gerçek uygulamada bu daha güvenli saklanmalı
+        
+        // Giriş ekranı elementleri
+        const loginScreen = document.getElementById('login-screen');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const rememberMe = document.getElementById('remember-me');
+        const loginBtn = document.getElementById('login-btn');
+        const guestBtn = document.getElementById('guest-btn');
+        const adminLoginBtn = document.getElementById('admin-login-btn');
+        const registerLink = document.getElementById('register-link');
+        
+        // Admin panel elementleri
+        const adminPanel = document.getElementById('admin-panel');
+        const adminPasswordInput = document.getElementById('admin-password');
+        const adminAccessBtn = document.getElementById('admin-access-btn');
+        const adminControls = document.getElementById('admin-controls');
+        const adminScoreInput = document.getElementById('admin-score');
+        const adminGoldInput = document.getElementById('admin-gold');
+        const setValuesBtn = document.getElementById('set-values-btn');
+        const unlockAllBtn = document.getElementById('unlock-all-btn');
+        const resetAllBtn = document.getElementById('reset-all-btn');
+        const adminToggle = document.getElementById('admin-toggle');
+        
+        // Kullanıcı verileri
+        let currentUser = null;
+        let isAdmin = false;
+        
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', function() {
+            checkRememberedUser();
+            
+            // Giriş butonu eventi
+            loginBtn.addEventListener('click', function() {
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value.trim();
+                
+                if (username && password) {
+                    loginUser(username, password);
+                } else {
+                    alert('Lütfen kullanıcı adı ve şifre girin!');
+                }
+            });
+            
+            // Misafir girişi
+            guestBtn.addEventListener('click', function() {
+                currentUser = {
+                    username: 'Misafir',
+                    isGuest: true
+                };
+                hideLoginScreen();
+            });
+            
+            // Admin giriş butonu
+            adminLoginBtn.addEventListener('click', function() {
+                adminPanel.style.display = 'block';
+            });
+            
+            // Admin şifre kontrolü
+            adminAccessBtn.addEventListener('click', function() {
+                if (adminPasswordInput.value === ADMIN_PASSWORD) {
+                    isAdmin = true;
+                    adminControls.style.display = 'block';
+                    adminToggle.style.display = 'block';
+                    alert('Admin olarak giriş yapıldı!');
+                } else {
+                    alert('Geçersiz admin şifresi!');
+                }
+            });
+            
+            // Admin değer ayarlama
+            setValuesBtn.addEventListener('click', function() {
+                if (isAdmin) {
+                    const newScore = parseInt(adminScoreInput.value);
+                    const newGold = parseInt(adminGoldInput.value);
+                    
+                    if (!isNaN(newScore)) {
+                        score = newScore;
+                        scoreElement.innerText = score;
+                    }
+                    
+                    if (!isNaN(newGold)) {
+                        gold = newGold;
+                        updateGoldDisplay();
+                        localStorage.setItem('stickHeroGold', gold);
+                    }
+                    
+                    alert('Değerler güncellendi!');
+                }
+            });
+            
+            // Tüm kilidleri aç
+            unlockAllBtn.addEventListener('click', function() {
+                if (isAdmin) {
+                    const allItems = [
+                        'character-robot', 'character-ninja', 'character-alien', 
+                        'character-wizard', 'character-dragon',
+                        'theme-cyberpunk', 'theme-pixel', 'theme-night', 'theme-boss',
+                        'power-double', 'power-slow', 'power-boss', 'power-shield',
+                        'boss-sword', 'boss-bow', 'boss-armor'
+                    ];
+                    
+                    ownedItems = ['character-classic', 'theme-classic', ...allItems];
+                    localStorage.setItem('stickHeroOwnedItems', JSON.stringify(ownedItems));
+                    markOwnedItems();
+                    alert('Tüm öğelerin kilidi açıldı!');
+                }
+            });
+            
+            // Sıfırlama butonu
+            resetAllBtn.addEventListener('click', function() {
+                if (isAdmin && confirm('Tüm veriler sıfırlanacak. Emin misiniz?')) {
+                    localStorage.clear();
+                    ownedItems = ['character-classic', 'theme-classic'];
+                    gold = 0;
+                    score = 0;
+                    highScores = [];
+                    updateGoldDisplay();
+                    scoreElement.innerText = score;
+                    markOwnedItems();
+                    alert('Tüm veriler sıfırlandı!');
+                }
+            });
+            
+            // Admin paneli toggle
+            adminToggle.addEventListener('click', function() {
+                adminPanel.style.display = adminPanel.style.display === 'none' ? 'block' : 'none';
+            });
+        });
+        
+        // Kullanıcı giriş fonksiyonu
+        function loginUser(username, password) {
+            // Burada normalde bir sunucu kontrolü yapılır, örnek amaçlı localStorage kullanıyoruz
+            const users = JSON.parse(localStorage.getItem('stickHeroUsers')) || [];
+            const user = users.find(u => u.username === username && u.password === password);
+            
+            if (user) {
+                currentUser = user;
+                
+                if (rememberMe.checked) {
+                    localStorage.setItem('rememberedUser', JSON.stringify({ username }));
+                } else {
+                    localStorage.removeItem('rememberedUser');
+                }
+                
+                hideLoginScreen();
+            } else {
+                alert('Geçersiz kullanıcı adı veya şifre!');
+            }
+        }
+        
+        // Hatırlanan kullanıcıyı kontrol et
+        function checkRememberedUser() {
+            const remembered = JSON.parse(localStorage.getItem('rememberedUser'));
+            if (remembered && remembered.username) {
+                usernameInput.value = remembered.username;
+                rememberMe.checked = true;
+                passwordInput.focus();
+            }
+        }
+        
+        // Giriş ekranını gizle
+        function hideLoginScreen() {
+            loginScreen.style.opacity = '0';
+            setTimeout(() => {
+                loginScreen.style.display = 'none';
+                showMainMenu();
+            }, 500);
+        }
+        
+        // ... ÖNCEKİ TÜM OYUN KODLARI BUNA BENZER ŞEKİLDE KORUNACAK ...
+    </script>
+</body>
+</html>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stick Hero</title>
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        cursor: pointer;
+      }
+
+      .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+      }
+
+      #score {
+        position: absolute;
+        top: 30px;
+        right: 30px;
+        font-size: 2em;
+        font-weight: 900;
+        color: white;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        z-index: 10;
+      }
+
+      #gold-display {
+        position: absolute;
+        top: 30px;
+        left: 30px;
+        font-size: 1.8em;
+        font-weight: 900;
+        color: gold;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        z-index: 10;
+        display: flex;
+        align-items: center;
+      }
+      
+      #gold-icon {
+        width: 25px;
+        height: 25px;
+        margin-right: 10px;
+        background-color: gold;
+        border-radius: 50%;
+        display: inline-block;
+      }
+      
+      .gold-earned {
+        position: absolute;
+        color: gold;
+        font-weight: bold;
+        font-size: 1.5em;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        z-index: 10;
+        opacity: 0;
+        animation: goldFloat 2s forwards;
+      }
+      
+      @keyframes goldFloat {
+        0% { transform: translateY(0); opacity: 1; }
+        100% { transform: translateY(-50px); opacity: 0; }
+      }
+
+      #introduction {
+        width: 200px;
+        height: 150px;
+        position: absolute;
+        font-weight: 600;
+        font-size: 0.8em;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        text-align: center;
+        transition: opacity 2s;
+        color: white;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        z-index: 10;
+      }
+
+      #restart {
+        width: 120px;
+        height: 120px;
+        position: absolute;
+        border-radius: 50%;
+        color: white;
+        background-color: red;
+        border: none;
+        font-weight: 700;
+        font-size: 1.2em;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        display: none;
+        cursor: pointer;
+        z-index: 20;
+      }
+
+      #perfect {
+        position: absolute;
+        opacity: 0;
+        transition: opacity 2s;
+        color: gold;
+        font-weight: bold;
+        font-size: 1.5em;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        z-index: 10;
+      }
+
+      /* Ana Menü Stilleri */
+      #main-menu {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 30;
+      }
+      
+      #main-menu h1 {
+        color: white;
+        font-size: 3em;
+        margin-bottom: 50px;
+        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+      }
+      
+      .menu-button {
+        width: 200px;
+        padding: 15px;
+        margin: 10px;
+        border: none;
+        border-radius: 5px;
+        background: #4CAF50;
+        color: white;
+        font-size: 1.2em;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+      
+      .menu-button:hover {
+        background: #45a049;
+        transform: scale(1.05);
+      }
+      
+      /* Oyun Sonu Ekranı */
+      #game-over {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 25;
+      }
+      
+      #game-over h2 {
+        color: white;
+        font-size: 2.5em;
+        margin-bottom: 20px;
+      }
+      
+      #final-score {
+        color: gold;
+        font-size: 2em;
+        margin-bottom: 30px;
+      }
+      
+      /* Yüksek Skorlar Ekranı */
+      #high-scores {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 35;
+      }
+      
+      #high-scores h2 {
+        color: white;
+        font-size: 2.5em;
+        margin-bottom: 30px;
+      }
+      
+      #high-scores-list {
+        color: white;
+        font-size: 1.5em;
+        margin-bottom: 30px;
+        text-align: center;
+      }
+      
+      /* Ayarlar Ekranı */
+      #settings {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 35;
+      }
+      
+      #settings h2 {
+        color: white;
+        font-size: 2.5em;
+        margin-bottom: 30px;
+      }
+      
+      .settings-option {
+        color: white;
+        margin: 15px;
+        font-size: 1.2em;
+      }
+      
+      .settings-section {
+        margin: 20px 0;
+        padding: 15px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        width: 80%;
+        max-width: 500px;
+      }
+      
+      .settings-section h3 {
+        margin-top: 0;
+        color: #4CAF50;
+      }
+      
+      .character-option {
+        display: inline-block;
+        margin: 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: transform 0.3s;
+      }
+      
+      .character-option:hover {
+        transform: scale(1.1);
+      }
+      
+      .character-option.selected {
+        border: 3px solid #4CAF50;
+        border-radius: 10px;
+        padding: 5px;
+      }
+      
+      .character-preview {
+        width: 80px;
+        height: 80px;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        margin-bottom: 5px;
+      }
+      
+      .theme-option {
+        display: inline-block;
+        margin: 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: transform 0.3s;
+      }
+      
+      .theme-option:hover {
+        transform: scale(1.05);
+      }
+      
+      .theme-option.selected {
+        border: 3px solid #4CAF50;
+        border-radius: 10px;
+        padding: 5px;
+      }
+      
+      .theme-preview {
+        width: 120px;
+        height: 80px;
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center;
+        margin-bottom: 5px;
+        border-radius: 5px;
+      }
+      
+      .back-button {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        padding: 10px 20px;
+        background: #f44336;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      /* Mağaza Stilleri - GÜNCELLENMİŞ KISIM */
+      #store {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        display: none;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        z-index: 35;
+        overflow-y: auto;
+        padding: 20px 0;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      #store h2 {
+        color: gold;
+        font-size: 2.5em;
+        margin-bottom: 20px;
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
+      }
+      
+      .store-section {
+        margin: 15px 0;
+        padding: 15px;
+        border-radius: 15px;
+        background: rgba(30, 30, 60, 0.7);
+        width: 90%;
+        max-width: 650px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 215, 0, 0.3);
+      }
+      
+      .store-section h3 {
+        margin: 0 0 20px 0;
+        color: #FFD700;
+        font-size: 1.6em;
+        text-align: center;
+        text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+      }
+      
+      .items-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+      }
+      
+      .item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+        width: 120px;
+        background: rgba(20, 20, 40, 0.8);
+        border-radius: 12px;
+        padding: 15px 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        border: 2px solid rgba(255, 215, 0, 0.2);
+      }
+      
+      .item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        border-color: rgba(255, 215, 0, 0.5);
+      }
+      
+      .item-preview {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 12px;
+        border-radius: 10px;
+        border: 2px solid rgba(255, 255, 255, 0.15);
+        transition: all 0.3s;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 2em;
+      }
+      
+      .item:hover .item-preview {
+        transform: scale(1.1);
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+      }
+      
+      .item-name {
+        color: white;
+        font-weight: bold;
+        font-size: 0.95em;
+        text-align: center;
+        margin-bottom: 8px;
+      }
+      
+      .item-price {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: linear-gradient(135deg, #FFD700, #FFC000);
+        color: #1a1a1a;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        font-size: 0.85em;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+      }
+      
+      .item-owned {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to right, #4CAF50, #2E7D32);
+        color: white;
+        padding: 5px;
+        font-size: 0.75em;
+        font-weight: bold;
+        text-align: center;
+        display: none;
+      }
+      
+      .item.owned {
+        border-color: #4CAF50;
+      }
+      
+      .item.owned .item-owned {
+        display: block;
+      }
+      
+      .gold-display {
+        background: rgba(0, 0, 0, 0.5);
+        padding: 12px 25px;
+        border-radius: 30px;
+        margin: 20px 0;
+        border: 1px solid #FFD700;
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        display: flex;
+        align-items: center;
+      }
+      
+      .gold-display span {
+        color: #FFD700;
+        font-weight: bold;
+        font-size: 1.3em;
+        margin-right: 8px;
+      }
+      
+      .gold-display #gold-amount-store {
+        color: white;
+        font-size: 1.5em;
+        font-weight: bold;
+      }
+
+      /* Boss Health Bar */
+      #boss-health-container {
+        position: absolute;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 300px;
+        height: 30px;
+        background-color: rgba(0, 0, 0, 0.5);
+        border-radius: 15px;
+        border: 2px solid #fff;
+        display: none;
+        z-index: 10;
+      }
+      
+      #boss-health-bar {
+        height: 100%;
+        width: 100%;
+        background-color: #f44336;
+        border-radius: 13px;
+        transition: width 0.3s;
+      }
+      
+      #boss-name {
+        position: absolute;
+        top: 50px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: white;
+        font-size: 1.5em;
+        font-weight: bold;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        display: none;
+        z-index: 10;
+      }
+      
+      /* Boss Fight Reward */
+      .boss-reward {
+        position: absolute;
+        color: gold;
+        font-weight: bold;
+        font-size: 2em;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        z-index: 10;
+        opacity: 0;
+        animation: bossRewardFloat 3s forwards;
+      }
+      
+      @keyframes bossRewardFloat {
+        0% { transform: translateY(0); opacity: 1; }
+        100% { transform: translateY(-100px); opacity: 0; }
+      }
+    </style>
+</head>
+<body>
+    <!-- Orijinal HTML içeriği aynı şekilde korunuyor -->
+    <div class="container">
+        <div id="score"></div>
+        <div id="gold-display" style="display: none;">
+            <div id="gold-icon"></div>
+            <span id="gold-amount">0</span>
+        </div>
+        <div id="boss-name"></div>
+        <div id="boss-health-container">
+            <div id="boss-health-bar"></div>
+        </div>
+        <canvas id="game" width="375" height="375"></canvas>
+        <div id="introduction">Fareyi basılı tutarak çubuk uzat</div>
+        <div id="perfect">ÇİFT PUAN!</div>
+        <button id="restart">YENİDEN</button>
+        
+        <!-- Ana Menü -->
+        <div id="main-menu">
+            <h1>STICK HERO</h1>
+            <button class="menu-button" id="start-button">BAŞLA</button>
+            <button class="menu-button" id="high-scores-button">YÜKSEK SKORLAR</button>
+            <button class="menu-button" id="settings-button">AYARLAR</button>
+            <button class="menu-button" id="store-button">MAĞAZA</button>
+        </div>
+        
+        <!-- Oyun Sonu Ekranı -->
+        <div id="game-over">
+            <h2>OYUN BİTTİ</h2>
+            <div id="final-score">Skor: 0</div>
+            <button class="menu-button" id="play-again-button">TEKRAR OYNA</button>
+            <button class="menu-button" id="main-menu-button">ANA MENÜ</button>
+        </div>
+        
+        <!-- Yüksek Skorlar Ekranı -->
+        <div id="high-scores">
+            <button class="back-button" id="back-from-high-scores">← Geri</button>
+            <h2>YÜKSEK SKORLAR</h2>
+            <div id="high-scores-list"></div>
+        </div>
+        
+        <!-- Ayarlar Ekranı -->
+        <div id="settings">
+            <button class="back-button" id="back-from-settings">← Geri</button>
+            <h2>AYARLAR</h2>
+            
+            <div class="settings-section">
+                <h3>Ses Ayarları</h3>
+                <div class="settings-option">
+                    <label for="sound-toggle">Ses Efektleri:</label>
+                    <input type="checkbox" id="sound-toggle" checked>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Zorluk</h3>
+                <div class="settings-option">
+                    <label for="difficulty">Zorluk:</label>
+                    <select id="difficulty">
+                        <option value="easy">Kolay</option>
+                        <option value="medium" selected>Orta</option>
+                        <option value="hard">Zor</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Tema Seçimi</h3>
+                <div class="theme-option selected" data-theme="classic">
+                    <div class="theme-preview" style="background-color: #BBD691;"></div>
+                    <div>Klasik</div>
+                </div>
+                <div class="theme-option" data-theme="cyberpunk">
+                    <div class="theme-preview" style="background-color: #FF2A6D; background-image: linear-gradient(to bottom, #FF2A6D, #05D9E8);"></div>
+                    <div>Cyberpunk</div>
+                </div>
+                <div class="theme-option" data-theme="pixel">
+                    <div class="theme-preview" style="background-color: #5F9EA0; background-image: linear-gradient(to bottom, #5F9EA0, #DEB887);"></div>
+                    <div>Pixel</div>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Karakter Seçimi</h3>
+                <div class="character-option selected" data-character="classic">
+                    <div class="character-preview" style="background-color: black;"></div>
+                    <div>Klasik</div>
+                </div>
+                <div class="character-option" data-character="robot">
+                    <div class="character-preview" style="background-color: silver;"></div>
+                    <div>Robot</div>
+                </div>
+                <div class="character-option" data-character="ninja">
+                    <div class="character-preview" style="background-color: #333;"></div>
+                    <div>Ninja</div>
+                </div>
+                <div class="character-option" data-character="alien">
+                    <div class="character-preview" style="background-color: #7F00FF;"></div>
+                    <div>Uzaylı</div>
+                </div>
+                <div class="character-option" data-character="wizard">
+                    <div class="character-preview" style="background-color: #9C27B0;"></div>
+                    <div>Büyücü</div>
+                </div>
+                <div class="character-option" data-character="dragon">
+                    <div class="character-preview" style="background-color: #FF5722;"></div>
+                    <div>Ejderha</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mağaza Ekranı - GÜNCELLENMİŞ KISIM -->
+        <div id="store">
+            <button class="back-button" id="back-from-store">← Geri</button>
+            <h2>MAĞAZA</h2>
+            
+            <div class="gold-display">
+                <span>Altınlarınız:</span>
+                <span id="gold-amount-store">0</span>
+            </div>
+            
+            <div class="store-section">
+                <h3>Karakterler</h3>
+                <div class="items-container">
+                    <div class="item owned" data-item="character-classic" data-type="character" data-value="classic">
+                        <div class="item-price">0</div>
+                        <div class="item-preview character-preview" style="background-color: black;"></div>
+                        <div class="item-name">Klasik</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="character-robot" data-type="character" data-value="robot">
+                        <div class="item-price">50</div>
+                        <div class="item-preview character-preview" style="background-color: silver;"></div>
+                        <div class="item-name">Robot</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="character-ninja" data-type="character" data-value="ninja">
+                        <div class="item-price">75</div>
+                        <div class="item-preview character-preview" style="background-color: #333;"></div>
+                        <div class="item-name">Ninja</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="character-alien" data-type="character" data-value="alien">
+                        <div class="item-price">100</div>
+                        <div class="item-preview character-preview" style="background-color: #7F00FF;"></div>
+                        <div class="item-name">Uzaylı</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="character-wizard" data-type="character" data-value="wizard">
+                        <div class="item-price">150</div>
+                        <div class="item-preview character-preview" style="background-color: #9C27B0;"></div>
+                        <div class="item-name">Büyücü</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="character-dragon" data-type="character" data-value="dragon">
+                        <div class="item-price">300</div>
+                        <div class="item-preview character-preview" style="background-color: #FF5722;"></div>
+                        <div class="item-name">Ejderha</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="store-section">
+                <h3>Temalar</h3>
+                <div class="items-container">
+                    <div class="item owned" data-item="theme-classic" data-type="theme" data-value="classic">
+                        <div class="item-price">0</div>
+                        <div class="item-preview theme-preview" style="background-color: #BBD691;"></div>
+                        <div class="item-name">Klasik</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="theme-cyberpunk" data-type="theme" data-value="cyberpunk">
+                        <div class="item-price">100</div>
+                        <div class="item-preview theme-preview" style="background: linear-gradient(to bottom, #FF2A6D, #05D9E8);"></div>
+                        <div class="item-name">Cyberpunk</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="theme-pixel" data-type="theme" data-value="pixel">
+                        <div class="item-price">100</div>
+                        <div class="item-preview theme-preview" style="background: linear-gradient(to bottom, #5F9EA0, #DEB887);"></div>
+                        <div class="item-name">Pixel</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="theme-night" data-type="theme" data-value="night">
+                        <div class="item-price">150</div>
+                        <div class="item-preview theme-preview" style="background: linear-gradient(to bottom, #0F2027, #203A43, #2C5364);"></div>
+                        <div class="item-name">Gece</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="theme-boss" data-type="theme" data-value="boss">
+                        <div class="item-price">250</div>
+                        <div class="item-preview theme-preview" style="background: linear-gradient(to bottom, #8B0000, #FF4500);"></div>
+                        <div class="item-name">Boss Arenası</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="store-section">
+                <h3>Özel Yetenekler</h3>
+                <div class="items-container">
+                    <div class="item" data-item="power-double" data-type="power" data-value="double">
+                        <div class="item-price">200</div>
+                        <div class="item-preview">2×</div>
+                        <div class="item-name">2x Puan</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="power-slow" data-type="power" data-value="slow">
+                        <div class="item-price">150</div>
+                        <div class="item-preview">⌛</div>
+                        <div class="item-name">Yavaş Çekim</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="power-boss" data-type="power" data-value="boss">
+                        <div class="item-price">500</div>
+                        <div class="item-preview">👹</div>
+                        <div class="item-name">Boss Çağırıcı</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="power-shield" data-type="power" data-value="shield">
+                        <div class="item-price">300</div>
+                        <div class="item-preview">🛡️</div>
+                        <div class="item-name">Kalkan</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="store-section">
+                <h3>Boss Avı Ekipmanları</h3>
+                <div class="items-container">
+                    <div class="item" data-item="boss-sword" data-type="boss-item" data-value="sword">
+                        <div class="item-price">400</div>
+                        <div class="item-preview">⚔️</div>
+                        <div class="item-name">Ejderha Kılıcı</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="boss-bow" data-type="boss-item" data-value="bow">
+                        <div class="item-price">350</div>
+                        <div class="item-preview">🏹</div>
+                        <div class="item-name">Büyülü Yay</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                    <div class="item" data-item="boss-armor" data-type="boss-item" data-value="armor">
+                        <div class="item-price">600</div>
+                        <div class="item-preview">🛡️</div>
+                        <div class="item-name">Ejderha Zırhı</div>
+                        <div class="item-owned">SATIN ALINDI</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+      // Orijinal JavaScript kodları aynen korunuyor
+      Array.prototype.last = function () {
+        return this[this.length - 1];
+      };
+
+      Math.sinus = function (degree) {
+        return Math.sin((degree / 180) * Math.PI);
+      };
+
+      // Oyun değişkenleri ve fonksiyonları orijinal haliyle korundu
+      let phase = "waiting";
+      let lastTimestamp;
+      let heroX;
+      let heroY;
+      let sceneOffset;
+      let platforms = [];
+      let sticks = [];
+      let trees = [];
+      let bossActive = false;
+      let bossHealth = 0;
+      let bossMaxHealth = 0;
+      let bossName = "";
+      let bossPlatform = null;
+      let bossAttackTimer = 0;
+      let bossAttackInterval = 3000;
+      let bossDefeated = false;
+      let bossItems = [];
+      let equippedBossItem = null;
+      let highScores = JSON.parse(localStorage.getItem('stickHeroHighScores')) || [];
+      let score = 0;
+      let gold = parseInt(localStorage.getItem('stickHeroGold')) || 0;
+      let ownedItems = JSON.parse(localStorage.getItem('stickHeroOwnedItems')) || [
+        'character-classic', 
+        'theme-classic'
+      ];
+      const canvasWidth = 375;
+      const canvasHeight = 375;
+      const platformHeight = 100;
+      const heroDistanceFromEdge = 10;
+      const paddingX = 100;
+      const perfectAreaSize = 10;
+      const backgroundSpeedMultiplier = 0.2;
+      let currentTheme = "classic";
+      let currentCharacter = "classic";
+      let activePower = null;
+      let stretchingSpeed = 4;
+      let turningSpeed = 4;
+      const walkingSpeed = 4;
+      const transitioningSpeed = 2;
+      const fallingSpeed = 2;
+
+      // Canvas ve context tanımları
+      const canvas = document.getElementById("game");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const ctx = canvas.getContext("2d");
+
+      // Element seçiciler
+      const introductionElement = document.getElementById("introduction");
+      const perfectElement = document.getElementById("perfect");
+      const restartButton = document.getElementById("restart");
+      const scoreElement = document.getElementById("score");
+      const bossNameElement = document.getElementById("boss-name");
+      const bossHealthContainer = document.getElementById("boss-health-container");
+      const bossHealthBar = document.getElementById("boss-health-bar");
+      const mainMenu = document.getElementById("main-menu");
+      const gameOverScreen = document.getElementById("game-over");
+      const finalScoreElement = document.getElementById("final-score");
+      const highScoresScreen = document.getElementById("high-scores");
+      const highScoresList = document.getElementById("high-scores-list");
+      const settingsScreen = document.getElementById("settings");
+      const storeScreen = document.getElementById("store");
+      const goldAmountElement = document.getElementById("gold-amount");
+      const goldAmountStoreElement = document.getElementById("gold-amount-store");
+      const startButton = document.getElementById("start-button");
+      const highScoresButton = document.getElementById("high-scores-button");
+      const settingsButton = document.getElementById("settings-button");
+      const storeButton = document.getElementById("store-button");
+      const playAgainButton = document.getElementById("play-again-button");
+      const mainMenuButton = document.getElementById("main-menu-button");
+      const backFromHighScores = document.getElementById("back-from-high-scores");
+      const backFromSettings = document.getElementById("back-from-settings");
+      const backFromStore = document.getElementById("back-from-store");
+      const soundToggle = document.getElementById("sound-toggle");
+      const difficultySelect = document.getElementById("difficulty");
+      const themeOptions = document.querySelectorAll('.theme-option');
+      const characterOptions = document.querySelectorAll('.character-option');
+      const storeItems = document.querySelectorAll('.item');
+
+      // Tema ve karakter konfigürasyonları orijinal haliyle korundu
+      const themes = {
+        classic: {
+          hill1BaseHeight: 100,
+          hill1Amplitude: 10,
+          hill1Stretch: 1,
+          hill2BaseHeight: 70,
+          hill2Amplitude: 20,
+          hill2Stretch: 0.5,
+          skyGradient: ["#BBD691", "#FEF1E1"],
+          hill1Color: "#95C629",
+          hill2Color: "#659F1C",
+          treeColors: ["#6D8821", "#8FAC34", "#98B333"],
+          platformColor: "black",
+          perfectAreaColor: "red",
+          stickColor: "black"
+        },
+        cyberpunk: {
+          hill1BaseHeight: 100,
+          hill1Amplitude: 15,
+          hill1Stretch: 0.8,
+          hill2BaseHeight: 70,
+          hill2Amplitude: 25,
+          hill2Stretch: 0.4,
+          skyGradient: ["#01012B", "#FF2A6D"],
+          hill1Color: "#05D9E8",
+          hill2Color: "#D1F7FF",
+          treeColors: ["#005678", "#05D9E8", "#D1F7FF"],
+          platformColor: "#FF2A6D",
+          perfectAreaColor: "#05D9E8",
+          stickColor: "#05D9E8"
+        },
+        pixel: {
+          hill1BaseHeight: 100,
+          hill1Amplitude: 5,
+          hill1Stretch: 1.2,
+          hill2BaseHeight: 70,
+          hill2Amplitude: 10,
+          hill2Stretch: 0.7,
+          skyGradient: ["#5F9EA0", "#DEB887"],
+          hill1Color: "#8FBC8F",
+          hill2Color: "#556B2F",
+          treeColors: ["#2E8B57", "#3CB371", "#66CDAA"],
+          platformColor: "#A0522D",
+          perfectAreaColor: "#FF6347",
+          stickColor: "#8B4513"
+        },
+        night: {
+          hill1BaseHeight: 100,
+          hill1Amplitude: 15,
+          hill1Stretch: 0.7,
+          hill2BaseHeight: 70,
+          hill2Amplitude: 25,
+          hill2Stretch: 0.3,
+          skyGradient: ["#0F2027", "#203A43", "#2C5364"],
+          hill1Color: "#1E3C72",
+          hill2Color: "#2A5298",
+          treeColors: ["#1E3C72", "#2A5298", "#4B6CB7"],
+          platformColor: "#4B6CB7",
+          perfectAreaColor: "#FFD700",
+          stickColor: "#4B6CB7"
+        },
+        boss: {
+          hill1BaseHeight: 100,
+          hill1Amplitude: 20,
+          hill1Stretch: 0.6,
+          hill2BaseHeight: 70,
+          hill2Amplitude: 30,
+          hill2Stretch: 0.4,
+          skyGradient: ["#8B0000", "#FF4500"],
+          hill1Color: "#B22222",
+          hill2Color: "#FF6347",
+          treeColors: ["#8B0000", "#B22222", "#DC143C"],
+          platformColor: "#2F4F4F",
+          perfectAreaColor: "#FFD700",
+          stickColor: "#FF4500"
+        }
+      };
+      
+      const characters = {
+        classic: {
+          width: 17,
+          height: 30,
+          bodyColor: "black",
+          eyeColor: "white",
+          bandColor: "red",
+          legColor: "black"
+        },
+        robot: {
+          width: 20,
+          height: 35,
+          bodyColor: "silver",
+          eyeColor: "red",
+          bandColor: "#333",
+          legColor: "#555"
+        },
+        ninja: {
+          width: 18,
+          height: 32,
+          bodyColor: "#333",
+          eyeColor: "white",
+          bandColor: "red",
+          legColor: "#222"
+        },
+        alien: {
+          width: 16,
+          height: 28,
+          bodyColor: "#7F00FF",
+          eyeColor: "#00FF00",
+          bandColor: "#FF00FF",
+          legColor: "#4B0082"
+        },
+        wizard: {
+          width: 17,
+          height: 35,
+          bodyColor: "#9C27B0",
+          eyeColor: "#FFEB3B",
+          bandColor: "#673AB7",
+          legColor: "#7B1FA2"
+        },
+        dragon: {
+          width: 25,
+          height: 40,
+          bodyColor: "#FF5722",
+          eyeColor: "#FFEB3B",
+          bandColor: "#E64A19",
+          legColor: "#D84315"
+        }
+      };
+      
+      const bosses = [
+        {
+          name: "Küçük Ejderha",
+          health: 5,
+          reward: 100,
+          minScore: 10,
+          color: "#FF6347"
+        },
+        {
+          name: "Orta Ejderha",
+          health: 10,
+          reward: 250,
+          minScore: 30,
+          color: "#FF4500"
+        },
+        {
+          name: "Büyük Ejderha",
+          health: 20,
+          reward: 500,
+          minScore: 50,
+          color: "#8B0000"
+        },
+        {
+          name: "Efsanevi Ejderha",
+          health: 30,
+          reward: 1000,
+          minScore: 100,
+          color: "#4B0082"
+        }
+      ];
+
+      // Oyun fonksiyonları orijinal haliyle korundu
+      function showMainMenu() {
+        mainMenu.style.display = "flex";
+        gameOverScreen.style.display = "none";
+        highScoresScreen.style.display = "none";
+        settingsScreen.style.display = "none";
+        storeScreen.style.display = "none";
+        document.getElementById('gold-display').style.display = "none";
+        bossHealthContainer.style.display = "none";
+        bossNameElement.style.display = "none";
+        resetGame();
+        updateGoldDisplay();
+      }
+
+      function showHighScores() {
+        mainMenu.style.display = "none";
+        highScoresScreen.style.display = "flex";
+        highScores.sort((a, b) => b - a);
+        highScoresList.innerHTML = highScores.map((score, index) => 
+          `<div>${index + 1}. ${score}</div>`
+        ).join('');
+      }
+
+      function showSettings() {
+        mainMenu.style.display = "none";
+        settingsScreen.style.display = "flex";
+      }
+
+      function showStore() {
+        mainMenu.style.display = "none";
+        storeScreen.style.display = "flex";
+        updateGoldDisplay();
+      }
+
+      function updateGoldDisplay() {
+        goldAmountElement.textContent = gold;
+        goldAmountStoreElement.textContent = gold;
+      }
+
+      function startGame() {
+        mainMenu.style.display = "none";
+        gameOverScreen.style.display = "none";
+        document.getElementById('gold-display').style.display = "flex";
+        bossDefeated = false;
+        resetGame();
+        
+        const difficulty = difficultySelect.value;
+        if (difficulty === "easy") {
+          stretchingSpeed = 6;
+          turningSpeed = 6;
+        } else if (difficulty === "medium") {
+          stretchingSpeed = 4;
+          turningSpeed = 4;
+        } else if (difficulty === "hard") {
+          stretchingSpeed = 2;
+          turningSpeed = 2;
+        }
+        
+        if (activePower === 'double') {
+          perfectElement.textContent = "4x PUAN!";
+        } else if (activePower === 'slow') {
+          stretchingSpeed *= 1.5;
+          turningSpeed *= 1.5;
+        } else if (activePower === 'boss') {
+          setTimeout(spawnBoss, 5000);
+        }
+        
+        activePower = null;
+      }
+
+      function spawnBoss() {
+        if (bossActive || bossDefeated) return;
+        
+        let availableBosses = bosses.filter(boss => score >= boss.minScore);
+        if (availableBosses.length === 0) return;
+        
+        const boss = availableBosses[Math.floor(Math.random() * availableBosses.length)];
+        
+        bossActive = true;
+        bossHealth = boss.health;
+        bossMaxHealth = boss.health;
+        bossName = boss.name;
+        
+        bossPlatform = {
+          x: platforms[platforms.length - 1].x + platforms[platforms.length - 1].w + 200,
+          w: 150,
+          isBossPlatform: true,
+          bossColor: boss.color
+        };
+        platforms.push(bossPlatform);
+        
+        bossNameElement.textContent = bossName;
+        bossNameElement.style.display = "block";
+        bossHealthContainer.style.display = "block";
+        updateBossHealth();
+      }
+
+      function updateBossHealth() {
+        const healthPercentage = (bossHealth / bossMaxHealth) * 100;
+        bossHealthBar.style.width = `${healthPercentage}%`;
+      }
+
+      function attackBoss() {
+        if (!bossActive) return;
+        
+        const heroPlatform = platforms.find(p => 
+          heroX >= p.x && heroX <= p.x + p.w
+        );
+        
+        if (heroPlatform && heroPlatform.isBossPlatform) {
+          let damage = 1;
+          if (bossItems.includes('sword')) damage += 2;
+          if (bossItems.includes('bow')) damage += 1;
+          
+          bossHealth -= damage;
+          updateBossHealth();
+          
+          if (bossHealth <= 0) {
+            defeatBoss();
+          } else {
+            setTimeout(() => {
+              if (bossActive) {
+                const currentHeroPlatform = platforms.find(p => 
+                  heroX >= p.x && heroX <= p.x + p.w
+                );
+                
+                if (currentHeroPlatform && currentHeroPlatform.isBossPlatform) {
+                  if (!bossItems.includes('armor')) {
+                    showGameOver();
+                  }
+                }
+              }
+            }, 1000);
+          }
+        }
+      }
+
+      function defeatBoss() {
+        bossActive = false;
+        bossDefeated = true;
+        bossHealthContainer.style.display = "none";
+        
+        const bossReward = bosses.find(b => b.name === bossName).reward;
+        gold += bossReward;
+        localStorage.setItem('stickHeroGold', gold);
+        updateGoldDisplay();
+        
+        const rewardElement = document.createElement('div');
+        rewardElement.className = 'boss-reward';
+        rewardElement.textContent = `+${bossReward} Altın!`;
+        rewardElement.style.left = `${window.innerWidth / 2 - 100}px`;
+        rewardElement.style.top = `${window.innerHeight / 2 + 50}px`;
+        document.body.appendChild(rewardElement);
+        
+        setTimeout(() => {
+          rewardElement.remove();
+        }, 3000);
+      }
+
+      function showGameOver() {
+        gameOverScreen.style.display = "flex";
+        finalScoreElement.textContent = `Skor: ${score}`;
+        
+        highScores.push(score);
+        if (highScores.length > 10) {
+          highScores.sort((a, b) => b - a);
+          highScores = highScores.slice(0, 10);
+        }
+        localStorage.setItem('stickHeroHighScores', JSON.stringify(highScores));
+        
+        const earnedGold = Math.floor(score / 1);
+        if (earnedGold > 0) {
+          gold += earnedGold;
+          localStorage.setItem('stickHeroGold', gold);
+          
+          const goldElement = document.createElement('div');
+          goldElement.className = 'gold-earned';
+          goldElement.textContent = `+${earnedGold} Altın`;
+          goldElement.style.left = `${window.innerWidth / 2 - 50}px`;
+          goldElement.style.top = `${window.innerHeight / 2 + 50}px`;
+          document.body.appendChild(goldElement);
+          
+          setTimeout(() => {
+            goldElement.remove();
+          }, 2000);
+        }
+        
+        updateGoldDisplay();
+      }
+
+      function resetGame() {
+        phase = "waiting";
+        lastTimestamp = undefined;
+        sceneOffset = 0;
+        score = 0;
+        bossActive = false;
+        bossDefeated = false;
+
+        introductionElement.style.opacity = 1;
+        perfectElement.style.opacity = 0;
+        perfectElement.textContent = "ÇİFT PUAN!";
+        restartButton.style.display = "none";
+        scoreElement.innerText = score;
+
+        platforms = [{ x: 50, w: 50 }];
+        generatePlatform();
+        generatePlatform();
+        generatePlatform();
+        generatePlatform();
+
+        sticks = [{ x: platforms[0].x + platforms[0].w, length: 0, rotation: 0 }];
+
+        trees = [];
+        generateTree();
+        generateTree();
+        generateTree();
+        generateTree();
+        generateTree();
+        generateTree();
+        generateTree();
+        generateTree();
+        generateTree();
+        generateTree();
+
+        heroX = platforms[0].x + platforms[0].w - heroDistanceFromEdge;
+        heroY = 0;
+
+        draw();
+      }
+
+      function generateTree() {
+        const minimumGap = 30;
+        const maximumGap = 150;
+
+        const lastTree = trees[trees.length - 1];
+        let furthestX = lastTree ? lastTree.x : 0;
+
+        const x =
+          furthestX +
+          minimumGap +
+          Math.floor(Math.random() * (maximumGap - minimumGap));
+
+        const theme = themes[currentTheme];
+        const color = theme.treeColors[Math.floor(Math.random() * theme.treeColors.length)];
+
+        trees.push({ x, color });
+      }
+
+      function generatePlatform() {
+        const minimumGap = 40;
+        const maximumGap = 200;
+        const minimumWidth = 20;
+        const maximumWidth = 100;
+
+        const lastPlatform = platforms[platforms.length - 1];
+        let furthestX = lastPlatform.x + lastPlatform.w;
+
+        const x =
+          furthestX +
+          minimumGap +
+          Math.floor(Math.random() * (maximumGap - minimumGap));
+        const w =
+          minimumWidth + Math.floor(Math.random() * (maximumWidth - minimumWidth));
+
+        platforms.push({ x, w });
+      }
+
+      function animate(timestamp) {
+        if (!lastTimestamp) {
+          lastTimestamp = timestamp;
+          window.requestAnimationFrame(animate);
+          return;
+        }
+
+        switch (phase) {
+          case "waiting":
+            return;
+          case "stretching": {
+            sticks.last().length += (timestamp - lastTimestamp) / stretchingSpeed;
+            break;
+          }
+          case "turning": {
+            sticks.last().rotation += (timestamp - lastTimestamp) / turningSpeed;
+
+            if (sticks.last().rotation > 90) {
+              sticks.last().rotation = 90;
+
+              const [nextPlatform, perfectHit] = thePlatformTheStickHits();
+              if (nextPlatform) {
+                if (activePower === 'double') {
+                  score += perfectHit ? 4 : 2;
+                } else {
+                  score += perfectHit ? 2 : 1;
+                }
+                scoreElement.innerText = score;
+
+                if (perfectHit) {
+                  perfectElement.style.opacity = 1;
+                  setTimeout(() => (perfectElement.style.opacity = 0), 1000);
+                }
+
+                if (!nextPlatform.isBossPlatform) {
+                  generatePlatform();
+                }
+                generateTree();
+                generateTree();
+              }
+
+              phase = "walking";
+            }
+            break;
+          }
+          case "walking": {
+            heroX += (timestamp - lastTimestamp) / walkingSpeed;
+
+            const [nextPlatform] = thePlatformTheStickHits();
+            if (nextPlatform) {
+              const maxHeroX = nextPlatform.x + nextPlatform.w - heroDistanceFromEdge;
+              if (heroX > maxHeroX) {
+                heroX = maxHeroX;
+                phase = "transitioning";
+              }
+            } else {
+              const maxHeroX = sticks.last().x + sticks.last().length + characters[currentCharacter].width;
+              if (heroX > maxHeroX) {
+                heroX = maxHeroX;
+                phase = "falling";
+              }
+            }
+            break;
+          }
+          case "transitioning": {
+            sceneOffset += (timestamp - lastTimestamp) / transitioningSpeed;
+
+            const [nextPlatform] = thePlatformTheStickHits();
+            if (sceneOffset > nextPlatform.x + nextPlatform.w - paddingX) {
+              sticks.push({
+                x: nextPlatform.x + nextPlatform.w,
+                length: 0,
+                rotation: 0
+              });
+              phase = "waiting";
+            }
+            break;
+          }
+          case "falling": {
+            if (sticks.last().rotation < 180)
+              sticks.last().rotation += (timestamp - lastTimestamp) / turningSpeed;
+
+            heroY += (timestamp - lastTimestamp) / fallingSpeed;
+            const maxHeroY =
+              platformHeight + 100 + (window.innerHeight - canvasHeight) / 2;
+            if (heroY > maxHeroY) {
+              showGameOver();
+              return;
+            }
+            break;
+          }
+          default:
+            throw Error("Wrong phase");
+        }
+
+        draw();
+        window.requestAnimationFrame(animate);
+
+        lastTimestamp = timestamp;
+      }
+
+      function thePlatformTheStickHits() {
+        if (sticks.last().rotation != 90)
+          throw Error(`Stick is ${sticks.last().rotation}°`);
+        const stickFarX = sticks.last().x + sticks.last().length;
+
+        const platformTheStickHits = platforms.find(
+          (platform) => platform.x < stickFarX && stickFarX < platform.x + platform.w
+        );
+
+        if (
+          platformTheStickHits &&
+          platformTheStickHits.x + platformTheStickHits.w / 2 - perfectAreaSize / 2 <
+            stickFarX &&
+          stickFarX <
+            platformTheStickHits.x + platformTheStickHits.w / 2 + perfectAreaSize / 2
+        )
+          return [platformTheStickHits, true];
+
+        return [platformTheStickHits, false];
+      }
+
+      function draw() {
+        ctx.save();
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+        drawBackground();
+
+        ctx.translate(
+          (window.innerWidth - canvasWidth) / 2 - sceneOffset,
+          (window.innerHeight - canvasHeight) / 2
+        );
+
+        drawPlatforms();
+        drawHero();
+        drawSticks();
+
+        ctx.restore();
+      }
+
+      function drawPlatforms() {
+        const theme = themes[currentTheme];
+        
+        platforms.forEach(({ x, w, isBossPlatform, bossColor }) => {
+          ctx.fillStyle = isBossPlatform ? bossColor : theme.platformColor;
+          ctx.fillRect(
+            x,
+            canvasHeight - platformHeight,
+            w,
+            platformHeight + (window.innerHeight - canvasHeight) / 2
+          );
+
+          if (sticks.last().x < x) {
+            ctx.fillStyle = theme.perfectAreaColor;
+            ctx.fillRect(
+              x + w / 2 - perfectAreaSize / 2,
+              canvasHeight - platformHeight,
+              perfectAreaSize,
+              perfectAreaSize
+            );
+          }
+          
+          if (isBossPlatform && bossActive) {
+            drawBoss(x + w / 2, canvasHeight - platformHeight - 50, bossColor);
+          }
+        });
+      }
+      
+      function drawBoss(x, y, color) {
+        ctx.save();
+        ctx.translate(x, y);
+        
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(0, -20, 30, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(-10, -25, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(10, -25, 5, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, -15, 10, 0, Math.PI);
+        ctx.stroke();
+        
+        ctx.fillStyle = `${color}80`;
+        ctx.beginPath();
+        ctx.moveTo(-30, -10);
+        ctx.lineTo(-60, -30);
+        ctx.lineTo(-30, -50);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(30, -10);
+        ctx.lineTo(60, -30);
+        ctx.lineTo(30, -50);
+        ctx.fill();
+        
+        ctx.restore();
+      }
+
+      function drawHero() {
+        const character = characters[currentCharacter];
+        ctx.save();
+        ctx.fillStyle = character.bodyColor;
+        ctx.translate(
+          heroX - character.width / 2,
+          heroY + canvasHeight - platformHeight - character.height / 2
+        );
+
+        drawRoundedRect(
+          -character.width / 2,
+          -character.height / 2,
+          character.width,
+          character.height - 4,
+          5
+        );
+
+        const legDistance = 5;
+        ctx.beginPath();
+        ctx.fillStyle = character.legColor;
+        ctx.arc(legDistance, 11.5, 3, 0, Math.PI * 2, false);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(-legDistance, 11.5, 3, 0, Math.PI * 2, false);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.fillStyle = character.eyeColor;
+        ctx.arc(5, -7, 3, 0, Math.PI * 2, false);
+        ctx.fill();
+
+        ctx.fillStyle = character.bandColor;
+        ctx.fillRect(-character.width / 2 - 1, -12, character.width + 2, 4.5);
+        
+        if (currentCharacter === "robot") {
+          ctx.fillStyle = "#555";
+          ctx.fillRect(-character.width / 2 + 2, -character.height / 2 + 2, character.width - 4, 5);
+          
+          ctx.fillStyle = "red";
+          ctx.beginPath();
+          ctx.arc(2, -7, 2, 0, Math.PI * 2, false);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(8, -7, 2, 0, Math.PI * 2, false);
+          ctx.fill();
+        } else if (currentCharacter === "ninja") {
+          ctx.fillStyle = "red";
+          ctx.beginPath();
+          ctx.moveTo(-character.width / 2, -5);
+          ctx.lineTo(0, -15);
+          ctx.lineTo(character.width / 2, -5);
+          ctx.fill();
+        } else if (currentCharacter === "alien") {
+          ctx.fillStyle = "#FF00FF";
+          ctx.beginPath();
+          ctx.moveTo(0, -character.height / 2);
+          ctx.lineTo(-5, -character.height / 2 - 10);
+          ctx.lineTo(5, -character.height / 2 - 10);
+          ctx.closePath();
+          ctx.fill();
+          
+          ctx.fillStyle = "#00FF00";
+          ctx.beginPath();
+          ctx.arc(2, -7, 3, 0, Math.PI * 2, false);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(8, -7, 3, 0, Math.PI * 2, false);
+          ctx.fill();
+        } else if (currentCharacter === "wizard") {
+          ctx.fillStyle = "#673AB7";
+          ctx.beginPath();
+          ctx.moveTo(-character.width / 2, -character.height / 2);
+          ctx.lineTo(0, -character.height / 2 - 15);
+          ctx.lineTo(character.width / 2, -character.height / 2);
+          ctx.fill();
+          
+          ctx.fillStyle = "#FFEB3B";
+          ctx.beginPath();
+          ctx.arc(2, -7, 3, 0, Math.PI * 2, false);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(8, -7, 3, 0, Math.PI * 2, false);
+          ctx.fill();
+        } else if (currentCharacter === "dragon") {
+          ctx.fillStyle = "#E64A19";
+          for (let i = -character.width / 2 + 5; i < character.width / 2 - 5; i += 5) {
+            ctx.beginPath();
+            ctx.arc(i, -character.height / 2 + 10, 3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          
+          ctx.fillStyle = "#FFEB3B";
+          ctx.beginPath();
+          ctx.arc(2, -7, 4, 0, Math.PI * 2, false);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(8, -7, 4, 0, Math.PI * 2, false);
+          ctx.fill();
+        }
+        
+        if (bossItems.includes('sword')) {
+          ctx.fillStyle = "#9E9E9E";
+          ctx.fillRect(character.width / 2, -10, 15, 3);
+        }
+        if (bossItems.includes('bow')) {
+          ctx.strokeStyle = "#795548";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(character.width / 2 + 10, -5, 8, 0, Math.PI);
+          ctx.stroke();
+        }
+        if (bossItems.includes('armor')) {
+          ctx.strokeStyle = "#607D8B";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(-character.width / 2, -character.height / 2, character.width, character.height);
+        }
+
+        ctx.restore();
+      }
+
+      function drawRoundedRect(x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.moveTo(x, y + radius);
+        ctx.lineTo(x, y + height - radius);
+        ctx.arcTo(x, y + height, x + radius, y + height, radius);
+        ctx.lineTo(x + width - radius, y + height);
+        ctx.arcTo(x + width, y + height, x + width, y + height - radius, radius);
+        ctx.lineTo(x + width, y + radius);
+        ctx.arcTo(x + width, y, x + width - radius, y, radius);
+        ctx.lineTo(x + radius, y);
+        ctx.arcTo(x, y, x, y + radius, radius);
+        ctx.fill();
+      }
+
+      function drawSticks() {
+        const theme = themes[currentTheme];
+        ctx.strokeStyle = theme.stickColor;
+        
+        sticks.forEach((stick) => {
+          ctx.save();
+          ctx.translate(stick.x, canvasHeight - platformHeight);
+          ctx.rotate((Math.PI / 180) * stick.rotation);
+
+          ctx.beginPath();
+          ctx.lineWidth = 2;
+          ctx.moveTo(0, 0);
+          ctx.lineTo(0, -stick.length);
+          ctx.stroke();
+
+          ctx.restore();
+        });
+      }
+
+      function drawBackground() {
+        const theme = themes[currentTheme];
+        
+        var gradient = ctx.createLinearGradient(0, 0, 0, window.innerHeight);
+        gradient.addColorStop(0, theme.skyGradient[0]);
+        gradient.addColorStop(1, theme.skyGradient[1]);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+
+        drawHill(theme.hill1BaseHeight, theme.hill1Amplitude, theme.hill1Stretch, theme.hill1Color);
+        drawHill(theme.hill2BaseHeight, theme.hill2Amplitude, theme.hill2Stretch, theme.hill2Color);
+
+        trees.forEach((tree) => drawTree(tree.x, tree.color));
+      }
+
+      function drawHill(baseHeight, amplitude, stretch, color) {
+        ctx.beginPath();
+        ctx.moveTo(0, window.innerHeight);
+        ctx.lineTo(0, getHillY(0, baseHeight, amplitude, stretch));
+        for (let i = 0; i < window.innerWidth; i++) {
+          ctx.lineTo(i, getHillY(i, baseHeight, amplitude, stretch));
+        }
+        ctx.lineTo(window.innerWidth, window.innerHeight);
+        ctx.fillStyle = color;
+        ctx.fill();
+      }
+
+      function drawTree(x, color) {
+        ctx.save();
+        ctx.translate(
+          (-sceneOffset * backgroundSpeedMultiplier + x) * themes[currentTheme].hill1Stretch,
+          getTreeY(x, themes[currentTheme].hill1BaseHeight, themes[currentTheme].hill1Amplitude)
+        );
+
+        const treeTrunkHeight = 5;
+        const treeTrunkWidth = 2;
+        const treeCrownHeight = 25;
+        const treeCrownWidth = 10;
+
+        ctx.fillStyle = "#7D833C";
+        ctx.fillRect(
+          -treeTrunkWidth / 2,
+          -treeTrunkHeight,
+          treeTrunkWidth,
+          treeTrunkHeight
+        );
+
+        ctx.beginPath();
+        ctx.moveTo(-treeCrownWidth / 2, -treeTrunkHeight);
+        ctx.lineTo(0, -(treeTrunkHeight + treeCrownHeight));
+        ctx.lineTo(treeCrownWidth / 2, -treeTrunkHeight);
+        ctx.fillStyle = color;
+        ctx.fill();
+
+        ctx.restore();
+      }
+
+      function getHillY(windowX, baseHeight, amplitude, stretch) {
+        const sineBaseY = window.innerHeight - baseHeight;
+        return (
+          Math.sinus((sceneOffset * backgroundSpeedMultiplier + windowX) * stretch) *
+            amplitude +
+          sineBaseY
+        );
+      }
+
+      function getTreeY(x, baseHeight, amplitude) {
+        const sineBaseY = window.innerHeight - baseHeight;
+        return Math.sinus(x) * amplitude + sineBaseY;
+      }
+
+      // Event listeners
+      restartButton.addEventListener("click", function (event) {
+        event.preventDefault();
+        resetGame();
+        restartButton.style.display = "none";
+      });
+
+      window.addEventListener("keydown", function (event) {
+        if (event.key == " ") {
+          event.preventDefault();
+          resetGame();
+          return;
+        }
+      });
+
+      window.addEventListener("mousedown", function (event) {
+        if (phase == "waiting" && mainMenu.style.display === "none") {
+          lastTimestamp = undefined;
+          introductionElement.style.opacity = 0;
+          phase = "stretching";
+          window.requestAnimationFrame(animate);
+        }
+      });
+
+      window.addEventListener("mouseup", function (event) {
+        if (phase == "stretching") {
+          phase = "turning";
+          if (bossActive) {
+            setTimeout(attackBoss, 500);
+          }
+        }
+      });
+
+      window.addEventListener("resize", function (event) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        draw();
+      });
+
+      // Button event listeners
+      startButton.addEventListener("click", startGame);
+      highScoresButton.addEventListener("click", showHighScores);
+      settingsButton.addEventListener("click", showSettings);
+      storeButton.addEventListener("click", showStore);
+      playAgainButton.addEventListener("click", startGame);
+      mainMenuButton.addEventListener("click", showMainMenu);
+      backFromHighScores.addEventListener("click", showMainMenu);
+      backFromSettings.addEventListener("click", showMainMenu);
+      backFromStore.addEventListener("click", showMainMenu);
+
+      // Theme selection
+      themeOptions.forEach(option => {
+        option.addEventListener('click', function() {
+          const theme = this.dataset.theme;
+          if (ownedItems.includes(`theme-${theme}`)) {
+            themeOptions.forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            currentTheme = theme;
+          } else {
+            alert('Bu tema kilitli! Mağazadan satın almalısınız.');
+          }
+        });
+      });
+
+      // Character selection
+      characterOptions.forEach(option => {
+        option.addEventListener('click', function() {
+          const character = this.dataset.character;
+          if (ownedItems.includes(`character-${character}`)) {
+            characterOptions.forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            currentCharacter = character;
+          } else {
+            alert('Bu karakter kilitli! Mağazadan satın almalısınız.');
+          }
+        });
+      });
+
+      // Store item selection
+      storeItems.forEach(item => {
+        item.addEventListener('click', function() {
+          const price = parseInt(this.querySelector('.item-price').textContent);
+          const itemId = this.dataset.item;
+          
+          if (this.classList.contains('owned')) {
+            activateItem(this);
+            return;
+          }
+          
+          if (gold >= price) {
+            gold -= price;
+            updateGoldDisplay();
+            localStorage.setItem('stickHeroGold', gold);
+            
+            ownedItems.push(itemId);
+            localStorage.setItem('stickHeroOwnedItems', JSON.stringify(ownedItems));
+            
+            this.classList.add('owned');
+            const ownedLabel = this.querySelector('.item-owned');
+            if (ownedLabel) {
+              ownedLabel.style.display = 'block';
+            }
+            
+            activateItem(this);
+          } else {
+            alert('Yeterli altınınız yok! Daha fazla oyun oynayarak altın kazanabilirsiniz.');
+          }
+        });
+      });
+
+      function activateItem(item) {
+        const itemType = item.dataset.type;
+        const itemValue = item.dataset.value;
+        
+        if (itemType === 'theme') {
+          currentTheme = itemValue;
+          document.querySelector(`.theme-option[data-theme="${itemValue}"]`).click();
+        } else if (itemType === 'character') {
+          currentCharacter = itemValue;
+          document.querySelector(`.character-option[data-character="${itemValue}"]`).click();
+        } else if (itemType === 'power') {
+          activePower = itemValue;
+          alert(`${item.textContent.trim()} yeteneği bir sonraki oyununuzda aktif olacak!`);
+        } else if (itemType === 'boss-item') {
+          if (!bossItems.includes(itemValue)) {
+            bossItems.push(itemValue);
+            localStorage.setItem('stickHeroBossItems', JSON.stringify(bossItems));
+          }
+          alert(`${item.textContent.trim()} ekipmanı boss savaşlarında kullanılacak!`);
+        }
+      }
+
+      function markOwnedItems() {
+        storeItems.forEach(item => {
+          if (ownedItems.includes(item.dataset.item)) {
+            item.classList.add('owned');
+            const ownedLabel = item.querySelector('.item-owned');
+            if (ownedLabel) {
+              ownedLabel.style.display = 'block';
+            }
+          }
+        });
+        
+        bossItems = JSON.parse(localStorage.getItem('stickHeroBossItems')) || [];
+      }
+
+      // Initialize
+      showMainMenu();
+      updateGoldDisplay();
+      markOwnedItems();
+      window.requestAnimationFrame(animate);
+    </script>
+</body>
+</html>
